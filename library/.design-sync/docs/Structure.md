@@ -1,7 +1,7 @@
 ---
 category: Structure
 ---
-Root of every build: a 3D view with a layer slider, the material list, and three buttons: Export .schematic (for Schematica), Export WorldEdit (the same build as a schematic worldedit-gtnh loads with `//schem load` and `//paste`, low north-west corner at the player's feet), and Copy blueprint. Every placement component (`Block`, `Fill`, `Hollow`, `Air`, `Stairs`, `Slab`, `Pillar`, `Door`, `Torch`, `Strip`, `Corner`, `ArchShape`) must be a descendant of a `<Structure>` - outside one they throw.
+Root of every build: a 3D view with a layer slider, the material list, and three buttons: Export .schematic (for Schematica), Export WorldEdit (the same build as a schematic worldedit-gtnh loads with `//schem load` and `//paste`, low north-west corner at the player's feet), and Copy blueprint. Every placement component (`Block`, `Fill`, `Hollow`, `Air`, `Stairs`, `Slab`, `Pillar`, `Door`, `Torch`, `Strip`, `Corner`, `ArchShape`, `Gradient`) must be a descendant of a `<Structure>` - outside one they throw.
 
 - `size` is `[width, height, length]`: x runs west -> east, y up, z north -> south. Every coordinate a child uses must lie inside it (0-based).
 - Children run in order and **later ones overwrite earlier ones**: big shapes first (foundation, walls), then openings (`Air`), windows, doors, trim, roof.

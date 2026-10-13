@@ -24,6 +24,8 @@ export interface CatalogBlock {
   tags: string[];
   /** Average side colour, for swatches. */
   color: string;
+  /** Spread of the side texture's brightness: 0 flat, ~0.1 typical stone, 0.3+ checkered. */
+  contrast?: number;
 }
 
 interface CatalogFile {

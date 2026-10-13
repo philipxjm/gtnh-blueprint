@@ -23,6 +23,10 @@ Screenshots and a walkthrough: **https://philipxjm.github.io/gtnh-blueprint/**
   ridges, valleys, slopes, cornices, columns, capitals, arches, windows with
   glass, banisters and balustrades. They're drawn the way the mod draws them,
   including roof pieces that join their neighbours.
+- **Colour gradients:** `<Gradient>` fills a box or a hollow wall with blocks
+  stepping in colour between waypoint blocks. Steps are matched in CIELAB
+  colour space; the modes are bands, dither, noise and map, all seeded so
+  they repeat exactly. `<GradientStrip>` shows the palette a gradient picks.
 - **`<Structure>`:** the 3D view, with a layer slider, an optional grid, a
   material list (with sawbench recipes for shapes), and three buttons:
   **Export .schematic** (Schematica), **Export WorldEdit**

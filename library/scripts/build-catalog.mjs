@@ -88,13 +88,14 @@ const cols = Math.ceil(Math.sqrt(tiles.length));
 const rows = Math.ceil(tiles.length / cols);
 const atlas = new PNG({ width: cols * TILE, height: rows * TILE });
 const avgColor = new Map(); // atlas index -> [r, g, b] of opaque pixels
+const contrast = new Map(); // atlas index -> spread of pixel brightness (0 flat .. ~0.5 checkerboard)
 
 tiles.forEach((path, idx) => {
   const src = PNG.sync.read(readFileSync(path));
   const size = Math.min(src.width, src.height);
   const step = size / TILE;
   const ox = (idx % cols) * TILE, oy = Math.floor(idx / cols) * TILE;
-  let sr = 0, sg = 0, sb = 0, n = 0;
+  let sr = 0, sg = 0, sb = 0, n = 0, sl = 0, sl2 = 0;
   for (let ty = 0; ty < TILE; ty++) for (let tx = 0; tx < TILE; tx++) {
     // Box-average the source pixels this tile pixel covers (HD packs).
     let r = 0, g = 0, b = 0, a = 0, c = 0;
@@ -105,9 +106,14 @@ tiles.forEach((path, idx) => {
       }
     const o = ((oy + ty) * atlas.width + ox + tx) * 4;
     atlas.data[o] = r / c; atlas.data[o + 1] = g / c; atlas.data[o + 2] = b / c; atlas.data[o + 3] = a / c;
-    if (a / c > 128) { sr += r / c; sg += g / c; sb += b / c; n++; }
+    if (a / c > 128) {
+      sr += r / c; sg += g / c; sb += b / c; n++;
+      const l = (0.2126 * r + 0.7152 * g + 0.0722 * b) / c / 255;
+      sl += l; sl2 += l * l;
+    }
   }
   avgColor.set(idx, n ? [sr / n, sg / n, sb / n] : [128, 128, 128]);
+  contrast.set(idx, n ? Math.sqrt(Math.max(0, sl2 / n - (sl / n) ** 2)) : 0);
 });
 writeFileSync(join(outDir, "atlas.png"), PNG.sync.write(atlas));
 
@@ -161,6 +167,9 @@ for (const { v, shape, paths } of picked) {
     light: v.light || undefined,
     tags: [...tags],
     color: "#" + side.map(c => Math.round(c).toString(16).padStart(2, "0")).join(""),
+    // Standard deviation of the side texture's brightness: busy, speckled or
+    // checkered textures read as noise in a gradient.
+    contrast: Math.round(contrast.get(faces[2]) * 1000) / 1000,
   };
 }
 writeFileSync(join(outDir, "catalog.json"), JSON.stringify({ tile: TILE, cols, rows, blocks: catalog }));

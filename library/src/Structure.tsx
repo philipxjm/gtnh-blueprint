@@ -21,6 +21,13 @@ export function usePlace() {
   };
 }
 
+/** Lets a component add a line to the Structure's warning box. */
+export function useReportProblem() {
+  const c = useContext(StructureContext);
+  if (!c) throw new Error("Block components must be inside a <Structure>");
+  return (message: string) => { c.problems.push(message); };
+}
+
 /** Used by <Shape>: records ArchitectureCraft shape blocks during render. */
 export function usePlaceShape() {
   const c = useContext(StructureContext);

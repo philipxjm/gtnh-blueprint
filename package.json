@@ -4,6 +4,6 @@
   "type": "module",
   "scripts": {
     "hut": "node examples/m1-hut.mjs",
-    "test": "node examples/m1-hut.mjs >/dev/null && node test/roundtrip.mjs && node test/architecture.mjs"
+    "test": "node examples/m1-hut.mjs >/dev/null && node test/roundtrip.mjs && node test/architecture.mjs && node test/gradient.mjs"
   }
 }

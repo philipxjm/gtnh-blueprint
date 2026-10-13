@@ -42,6 +42,8 @@ import { Structure, Fill, Hollow, Pillar, Stairs, Slab, Block, Door, Torch } fro
 | `<Strip block at to? edge size?>` | Forge Multipart strips along one edge of each block space (see Microblocks). |
 | `<Corner block at to? corner size?>` | Forge Multipart corner pieces (nooks). |
 | `<ArchShape shape block at to? facing? upsideDown? secondary? offsetX?>` | ArchitectureCraft shapes (roofs, cornices, columns, arches, windows, banisters...); see `.design-sync/docs/ArchShape.md`. |
+| `<Gradient blocks from to axis? steps? mode? randomness? scale? octaves? seed? hollow?>` | A box or shell filled with a colour gradient between waypoint blocks; see `.design-sync/docs/Gradient.md`. |
+| `<GradientStrip blocks steps?>` | Shows the blocks a gradient steps through. |
 | `<Palette tags? shape? query?>` | Searchable block picker (for people choosing blocks). |
 
 **Later components overwrite earlier ones.** Build big shapes first, then

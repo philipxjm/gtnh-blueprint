@@ -2,7 +2,11 @@
 // <Structure> and renders nothing itself. Later components overwrite earlier
 // ones, so a <Fill> followed by <Air> carves a hole, and a <Window> placed
 // after a wall replaces the wall blocks it covers.
-import { usePlace, usePlacePart, usePlaceShape } from "./Structure";
+import { BlockIcon, usePlace, usePlacePart, usePlaceShape, useReportProblem } from "./Structure";
+import { gradientBlocks, type GradientPool } from "./gradient";
+// @ts-ignore - plain JS shared with the Node tools
+import { gradientSlot } from "./core/gradient.js";
+import { lookup } from "./catalog";
 import type { Facing, Vec3 } from "./model";
 // @ts-ignore - plain JS shared with the Node tools
 import { edgeSlot, cornerSlot } from "./core/microblocks.js";
@@ -355,4 +359,122 @@ export function ArchShape({ shape, block, at, to = at, facing, upsideDown, secon
   const p = usePlaceShape();
   for (const q of range(at, to)) p.place(q, block, { shape, facing, upsideDown, secondary, offsetX, glow, disconnected, side, turn });
   return null;
+}
+
+export type GradientMode = "bands" | "dither" | "noise" | "map";
+
+export interface GradientProps {
+  /**
+   * Waypoint blocks, in order from the low end of `axis` (bottom, west or
+   * north) to the high end, e.g. ["minecraft:stonebrick@0", "chisel:marble@0"].
+   * The steps between are filled with the blocks nearest in colour.
+   */
+  blocks: BlockRef[];
+  /** One corner, inclusive. */
+  from: Vec3;
+  /** Opposite corner, inclusive. */
+  to: Vec3;
+  /** Direction the colour changes along: "y" (default; bottom to top), "x" (west to east) or "z" (north to south). */
+  axis?: "x" | "y" | "z";
+  /** Blocks in the strip (waypoints included). Default: one per block along the axis. */
+  steps?: number;
+  /**
+   * "bands" (default): even bands. "dither": bands with scattered edges.
+   * "noise": bands with organic, interlocking edges. "map": patches from
+   * noise alone, no axis, like a biome map.
+   */
+  mode?: GradientMode;
+  /** How far noise can push a block across bands, 0..1 (1 = up to 3 steps). Default 0.5. */
+  randomness?: number;
+  /** Size of the noise shapes in blocks ("noise" and "map"). Default 4. */
+  scale?: number;
+  /** Finer noise detail on top, 1..5. Default 2. */
+  octaves?: number;
+  /** Change for a different random arrangement with the same settings. Default 1. */
+  seed?: number;
+  /** Blocks the steps may use: "opaque" full cubes with one texture on every side (default), "glass", or any "cubes". */
+  pool?: GradientPool;
+  /** No block used twice in the strip. Default true. */
+  unique?: boolean;
+  /** Let the steps use busy, speckled or checkered textures too. Default false. */
+  busy?: boolean;
+  /** Only the box's shell, like <Hollow>. */
+  hollow?: boolean;
+  /** With hollow: leave the floor layer out. */
+  noFloor?: boolean;
+  /** With hollow: leave the ceiling layer out. */
+  noCeiling?: boolean;
+}
+
+/**
+ * A box (or hollow shell) filled with a colour gradient between waypoint
+ * blocks: walls that fade from dark stone at the base to pale marble at the
+ * top, a floor that blends grass into gravel, a noisy weathered facade. The
+ * same props always give the same blocks.
+ */
+export function Gradient({ blocks, from, to, axis = "y", steps, mode = "bands", randomness = 0.5, scale = 4, octaves = 2, seed = 1,
+  pool, unique = true, busy, hollow, noFloor, noCeiling }: GradientProps) {
+  const place = usePlace();
+  const report = useReportProblem();
+  const lo = [0, 1, 2].map(i => Math.min(from[i], to[i])), hi = [0, 1, 2].map(i => Math.max(from[i], to[i]));
+  const ax = { x: 0, y: 1, z: 2 }[axis];
+  const len = hi[ax] - lo[ax] + 1;
+  const { strip, problems } = gradientBlocks(blocks, Math.max(2, steps ?? len), { pool, unique, busy });
+  problems.forEach(report);
+  if (!strip.length) return null;
+  for (const ref of blocks) {
+    const b = lookup(ref);
+    if (b && b.shape !== "cube") report(`Gradient: ${ref} is a ${b.shape}; gradients are made of full blocks`);
+  }
+  for (const p of range(from, to)) {
+    if (hollow) {
+      const wall = p[0] === lo[0] || p[0] === hi[0] || p[2] === lo[2] || p[2] === hi[2];
+      const floor = p[1] === lo[1] && !noFloor, ceil = p[1] === hi[1] && !noCeiling;
+      if (!(wall || floor || ceil)) continue;
+    }
+    const t = (p[ax] - lo[ax] + 0.5) / len;
+    place(p, strip[gradientSlot(t, p[0], p[1], p[2], strip.length, { mode, randomness, scale, octaves, seed })]);
+  }
+  return null;
+}
+
+export interface GradientStripProps {
+  /** Waypoint blocks, in order. */
+  blocks: BlockRef[];
+  /** Blocks in the strip. Default 9. */
+  steps?: number;
+  pool?: GradientPool;
+  /** No block used twice. Default true. */
+  unique?: boolean;
+  /** Allow busy, speckled or checkered textures. Default false. */
+  busy?: boolean;
+}
+
+/**
+ * Shows the blocks a gradient steps through (the same strip <Gradient> uses
+ * for these waypoints and steps), with names and references. Works on its
+ * own, outside a <Structure>.
+ */
+export function GradientStrip({ blocks, steps = 9, pool, unique = true, busy }: GradientStripProps) {
+  const { strip, problems } = gradientBlocks(blocks, steps, { pool, unique, busy });
+  const waypoints = new Set(blocks.map(b => b.trim()));
+  return (
+    <div style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif", background: "#15171c", color: "#e6e8eb", padding: 14, borderRadius: 10 }}>
+      <div style={{ display: "flex", gap: 3, marginBottom: 10 }}>
+        {strip.map((k, i) => <div key={i} style={{ flex: 1, minWidth: 0 }}><BlockIcon block={k} size={40} /></div>)}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "4px 14px", fontSize: 12 }}>
+        {strip.map((k, i) => (
+          <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
+            <span style={{ color: "#8b93a1", width: 18, textAlign: "right" }}>{i + 1}</span>
+            <BlockIcon block={k} />
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: waypoints.has(k) ? 650 : 400 }} title={k}>
+              {lookup(k)?.display ?? k}
+            </span>
+          </div>
+        ))}
+      </div>
+      {problems.map(p => <div key={p} style={{ color: "#f3c46b", fontSize: 12, marginTop: 6 }}>⚠ {p}</div>)}
+    </div>
+  );
 }
