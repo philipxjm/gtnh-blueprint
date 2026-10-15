@@ -3,7 +3,7 @@ category: Placement
 ---
 ArchitectureCraft shapes inside a `<Structure>`: sloped roofs, ridges and valleys, cornices, columns and capitals, arches, windows, banisters and balustrades, cut at the sawbench from one material block. One shape per block space, at `at` or a run to `to`. They render exactly as in game, including roof pieces joining their neighbours.
 
-- `block`: the material, a normal opaque block, glass or a slab (`"minecraft:brick_block@0"`, `"chisel:marble@0"`, `"minecraft:planks@1"`).
+- `block`: the material: any full opaque block (logs and stripped logs included), glass or a slab (`"minecraft:brick_block@0"`, `"chisel:marble@0"`, `"minecraft:planks@1"`, `"etfuturum:log2_stripped@1"`).
 - `facing`:
   - two-sided shapes point it at their back: uphill for `roofTile`, slopes, `stairs` and banisters, the wall for cornices and overhangs;
   - ridges and valleys take either side across the ridge line (a ridge running east-west takes `"north"` or `"south"`);

@@ -168,7 +168,8 @@ export interface ShapeOptions {
   disconnected?: number;
 }
 
-// Blocks the sawbench takes besides normal opaque cubes (TileSawbench.isAcceptableMaterial).
+// Blocks the sawbench takes besides normal opaque full blocks, logs included (TileSawbench.isAcceptableMaterial:
+// renderAsNormalBlock and no tile entity, or glass, stained glass and slabs).
 const SAWBENCH_EXTRA = new Set(["minecraft:glass", "minecraft:stained_glass"]);
 
 /** One ArchitectureCraft shape block of material `ref`. */
@@ -180,8 +181,9 @@ export function shapeCellFor(ref: string, opts: ShapeOptions): { cell: Cell; pro
   if (!sh) problems.push(`unknown ArchitectureCraft shape "${opts.shape}"`);
   else if (sh.placeable === false) problems.push(`${sh.title} is an item, not a block (apply cladding with secondary)`);
   if (!block) problems.push(`unknown block "${ref}"`);
-  else if (!(block.shape === "slab" || SAWBENCH_EXTRA.has(block.name) || (block.shape === "cube" && block.alpha === "opaque")))
-    problems.push(`${ref} is not a sawbench material (normal opaque blocks, glass and slabs)`);
+  else if (!(block.shape === "slab" || SAWBENCH_EXTRA.has(block.name)
+    || ((block.shape === "cube" || block.shape === "pillar") && block.alpha === "opaque")))
+    problems.push(`${ref} is not a sawbench material (full opaque blocks including logs, glass and slabs)`);
   const { side, turn } = opts.side !== undefined || opts.turn !== undefined
     ? { side: opts.side ?? 0, turn: opts.turn ?? 0 }
     : sh ? orientShape(sh, opts.facing ?? "north", !!opts.upsideDown) : { side: 0, turn: 0 };

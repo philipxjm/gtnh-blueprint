@@ -55,9 +55,11 @@ for (const v of variants) {
   // Doors are the one family kept despite a tile entity: MalisisDoors adds
   // one for the swing animation and recreates it when the door is placed.
   if (v.hasTileEntity && v.family !== "door") continue;
-  if (SKIP_MATERIAL.has(v.material)) continue;
+  // Still water and lava sources are kept as "liquid" for pools and moats; other fluids are not building blocks.
+  const liquid = (v.name === "minecraft:water" || v.name === "minecraft:lava") && v.meta === 0;
+  if (SKIP_MATERIAL.has(v.material) && !liquid) continue;
   if (v.material === "circuits" && v.family !== "torch") continue;
-  const shape = shapeOf(v);
+  const shape = liquid ? "liquid" : shapeOf(v);
   if (!shape) continue;
   if (!v.icons.every(Boolean)) continue;
   const paths = v.icons.map(texturePath);

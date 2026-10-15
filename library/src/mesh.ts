@@ -230,6 +230,20 @@ export function buildMeshes(grid: Grid, maxY = Infinity) {
       case "door": box(buf, o, DOOR_PANEL[c.facing ?? "north"], t, tint); break;
       case "trapdoor": box(buf, o, [0, 0, 0, 1, 3 * P, 1], t, tint); break;
       case "carpet": box(buf, o, [0, 0, 0, 1, P, 1], t, tint); break;
+      case "liquid": {
+        // Still water / lava: the surface sits at 14/16 unless the same liquid is above; faces between
+        // liquid blocks and against solid cubes are hidden.
+        const above = grid.get([at[0], at[1] + 1, at[2]]);
+        const top = above?.key === c.key && at[1] + 1 <= maxY ? 1 : 14 * P;
+        box(buf, o, [0, 0, 0, 1, top, 1], t, tint, side => {
+          const d = NEIGHBOUR[side];
+          const np: Vec3 = [at[0] + d[0], at[1] + d[1], at[2] + d[2]];
+          if (np[1] > maxY) return false;
+          const nc = grid.get(np);
+          return nc?.key === c.key || (side !== UP && isSolidCube(nc));
+        });
+        break;
+      }
       case "ladder": box(buf, o, [0, 0, 15 * P, 1, 1, 1], t, tint); break;
       case "torch": box(buf, o, TORCH_AT[c.on ?? "floor"], t, tint); break;
     }

@@ -5,7 +5,7 @@ import atlasUrl from "./generated/atlas.png";
 
 export type Shape =
   | "cube" | "slab" | "stairs" | "pillar" | "pane" | "wall" | "fence" | "fencegate"
-  | "door" | "trapdoor" | "carpet" | "torch" | "ladder";
+  | "door" | "trapdoor" | "carpet" | "torch" | "ladder" | "liquid";
 
 export interface CatalogBlock {
   /** Registry name, e.g. "minecraft:stonebrick". */
